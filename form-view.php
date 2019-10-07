@@ -1,6 +1,4 @@
-<?php // define variables and set to empty values
-$emailErr = "";
-$email= "";
+<?php
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
@@ -8,12 +6,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 $email = $_POST['email'];
 
 // Validate email
-if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    echo("$email is a valid email address");
-} else {
-    echo("$email is not a valid email address");
-}
+    if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $emailErr = "$email is a valid email address";
+    } else {
+        $emailErr = "$email is NOT a valid email address";
+    }
 
+    if (empty($_POST["street"])) {
+            $streetErr = "Street is required";
+    } else {
+            $street = $_POST["street"];
+        }
+    if (empty($_POST["streetnumber"])) {
+        $streetnumberErr = "Street number is required";
+    } else {
+        $streetnumber = $_POST["streetnumber"];
+        if (is_numeric($streetnumber) !== true) {
+            $streetnumberErr = 'Numbers are only allowed in this field';
+        }
+    }
+    if (empty($_POST["city"])) {
+        $cityErr = "City is required";
+    } else {
+        $city = $_POST["city"];
+    }
+    if (empty($_POST["zipcode"])) {
+        $zipcodeErr = "Zipcode is required";
+    } else {
+        $zipcode = $_POST["zipcode"];
+        if (is_numeric($zipcode) !== true) {
+            $zipcodeErr = 'Numbers are only allowed in this field';
+        }
+    }
 }
 
 ?>
@@ -46,7 +70,10 @@ if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
         <div class="form-row">
             <div class="form-group col-md-6">
                 <label for="email">E-mail:</label>
-                <input type="text" id="email" name="email" class="form-control"/>
+                <input type="text" id="email" name="email" class="form-control" value=<?php echo "$email"?>>
+                <?php echo "<span class='alert-danger'>";
+                      echo  $emailErr;
+                      echo "</span>"; ?>
             </div>
             <div></div>
         </div>
@@ -57,21 +84,33 @@ if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
             <div class="form-row">
                 <div class="form-group col-md-6">
                     <label for="street">Street:</label>
-                    <input type="text" name="street" id="street" class="form-control">
+                    <input type="text" name="street" id="street" class="form-control" value=<?php echo "$street"?>>
+                    <?php echo "<span class='alert-danger'>";
+                    echo  $streetErr;
+                    echo "</span>"; ?>
                 </div>
                 <div class="form-group col-md-6">
                     <label for="streetnumber">Street number:</label>
-                    <input type="text" id="streetnumber" name="streetnumber" class="form-control">
+                    <input type="text" id="streetnumber" name="streetnumber" class="form-control" value=<?php echo "$streetnumber"?>>
+                    <?php echo "<span class='alert-danger'>";
+                    echo  $streetnumberErr;
+                    echo "</span>"; ?>
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group col-md-6">
                     <label for="city">City:</label>
-                    <input type="text" id="city" name="city" class="form-control">
+                    <input type="text" id="city" name="city" class="form-control" value=<?php echo "$city"?>>
+                    <?php echo "<span class='alert-danger'>";
+                    echo  $cityErr;
+                    echo "</span>"; ?>
                 </div>
                 <div class="form-group col-md-6">
                     <label for="zipcode">Zipcode</label>
-                    <input type="text" id="zipcode" name="zipcode" class="form-control">
+                    <input type="text" id="zipcode" name="zipcode" class="form-control" value=<?php echo "$zipcode"?>>
+                    <?php echo "<span class='alert-danger'>";
+                    echo  $zipcodeErr;
+                    echo "</span>"; ?>
                 </div>
             </div>
         </fieldset>
