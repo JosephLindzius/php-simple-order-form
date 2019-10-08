@@ -8,8 +8,8 @@ declare(strict_types=1);
 //error_reporting(E_ALL);
 
 //we are going to use session variables so we need to enable sessions
-session_start();
 
+session_start();
 
 function whatIsHappening()
 {
@@ -23,7 +23,7 @@ function whatIsHappening()
     echo '<h2>$_SESSION</h2>';
     var_dump($_SESSION);
     echo '<h2>$_SERVER</h2>';
-    var_dump($_SERVER["REQUEST_METHOD"]);
+    var_dump($_SERVER);
 
 }
 
@@ -41,7 +41,7 @@ $drinks = [
     ['name' => 'Sprite', 'price' => 2],
     ['name' => 'Ice-tea', 'price' => 3],
 ];
-$totalValue = 0;
+
 require 'form-view.php';
 
 whatIsHappening();

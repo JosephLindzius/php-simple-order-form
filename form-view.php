@@ -1,15 +1,27 @@
 <?php
+// https://github.com/becodeorg/atw-lamarr-2-13/tree/master/2.The-Hills/php/3.simple-order-form
+
+function showDeliveryTime ($_time) {
+    $time = strtotime($_time);
+    $datetime = new DateTime();
+    $datetime->setTimestamp($time);
+    $format = $datetime->format('H:i');
+    echo "or around $format";
+}
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-$info = [];
-// Variable to check
 
+$info = [];
+$emailValidated = false;
+$streetnumberValidated = false;
+$zipcodeValidated = false;
 
 // Validate email
     if (!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
         $emailErr = "$_POST[email] is NOT a valid email address";
     } else {
         $email = $_POST['email'];
+        $emailValidated = true;
     }
 
     if (empty($_POST["street"])) {
@@ -23,6 +35,8 @@ $info = [];
         $streetnumber = $_POST["streetnumber"];
         if (is_numeric($_POST["streetnumber"]) !== true) {
             $streetnumberErr = 'Numbers are only allowed in this field';
+        } else {
+            $streetnumberValidated = true;
         }
     }
     if (empty($_POST["city"])) {
@@ -36,32 +50,93 @@ $info = [];
         $zipcode = $_POST["zipcode"];
         if (is_numeric($_POST["zipcode"]) !== true) {
             $zipcodeErr = 'Numbers are only allowed in this field';
+        } else {
+            $zipcodeValidated = true;
         }
 
     }
+    if ($_POST["products"] == null) {
+        echo "<span class='alert-danger'>You have not selected any of our tasty food and drinks please select some and try to submit again</span>";
+    }
+
     $test = false;
-    if ($email !== null && $street !== null && $streetnumber !== null && $city !== null && $zipcode !==null) {
-        echo "<span class='alert-success'>Your order has been processed and sent!</span>";
+    if ($_POST["products"] !== null && $email !== null && $emailValidated = true && $street !== null && $streetnumber !== null && $streetnumberValidated = true && $city !== null && $zipcode !==null && $zipcodeValidated = true) {
+        echo "<span class='alert-success'>Your order has been processed and sent!</span><br>";
         echo "<span class='alert-success'>You have chosen ";
         echo "$_POST[delivery]";
-        echo " express delivery and you're product shall arrive in around <span id='time'>";
-        if ($_POST[delivery] == "express") {
-            echo "45 minutes.";
+        echo " delivery and your product shall arrive in around <span id='time'>";
+        if ($_POST['delivery'] == "express") {
+            echo "45 minutes ";
+            showDeliveryTime("+45 minutes");
+            echo '<br>';
         } else {
             echo "2 hours.";
+            showDeliveryTime("+2 hours");
+            echo '<br>';
         }
         echo "</span></span>";
         $test = true;
-        $_SESSION["email"] = $email;
-        $_SESSION["street"] = $street;
-        $_SESSION["streetnumber"] = $streetnumber;
-        $_SESSION["city"] = $city;
-        $_SESSION["zipcode"] = $zipcode;
+        $totalPurchase = 0;
+        $_COOKIE["email"] = $email;
+        $_COOKIE["street"] = $street;
+        $_COOKIE["streetnumber"] = $streetnumber;
+        $_COOKIE["city"] = $city;
+        $_COOKIE["zipcode"] = $zipcode;
 
+        $totalValue = 0;
+        $url = 'http://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
 
+        if (strpos($url, '?food=1') == true) {
+            foreach ($_POST["products"] as $i => $selected) {
+                $totalValue += $food[$i]["price"];
+            }
+        }
+        if (strpos($url, '?food=0') == true) {
+            foreach ($_POST["products"] as $i => $selected) {
+                $totalValue += $drinks[$i]["price"];
+            }
+        }
+        $_SESSION['totalValue'] += $totalValue;
+
+        function emailMessage (){
+
+        }
+        $subject = "You have just ordered from the Personal Ham Processors!  We thank you for your purchase!";
+        $closingStatement = "You have just ordered a total of &euro;$totalValue";
+       // var_dump(mail ( $email , $subject , $message));
+        echo $subject;
+        echo '<br><br>';
+        echo "Email: $email <br>";
+        echo "Street name: $street <br>";
+        echo "Street number: $streetnumber <br>";
+        echo "City: $city <br>";
+        echo "Zipcode: $zipcode <br><br>";
+        echo "You have ordered: <br>";
+        $url = 'http://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
+        if (strpos($url, '?food=1') == true) {
+            foreach ($_POST["products"] as $i => $selected) {
+                echo $food[$i]["name"];
+                echo ' &euro;';
+                echo $food[$i]["price"];
+                echo "<br>";
+            }
+        }
+        if (strpos($url, '?food=0') == true) {
+            foreach ($_POST["products"] as $i => $selected) {
+                echo $drinks[$i]["name"];
+                echo ' &euro;';
+                echo $drinks[$i]["price"];
+                echo "<br>";
+            }
+        }
+        echo '<br>';
+        echo "$closingStatement.";
     }
 
 }
+
+
+
 
 
 
@@ -95,12 +170,8 @@ $info = [];
         <div class="form-row">
             <div class="form-group col-md-6">
                 <label for="email">E-mail:</label>
-                <input type="text" id="email" name="email" class="form-control" value=<?php
-                if ($test == true) {
-                echo "$_SESSION[email]";
-                } else {
-                    echo "$email";
-                }?>>
+                   <input type="text" id="email" name="email" class="form-control" value=<?php
+                ?>>
                 <?php echo "<span class='alert-danger'>";
                       echo  $emailErr;
                       echo "</span>"; ?>
@@ -116,7 +187,7 @@ $info = [];
                     <label for="street">Street:</label>
                     <input type="text" name="street" id="street" class="form-control" value=<?php
                     if ($test == true) {
-                        echo "$_SESSION[street]";
+                        echo "$_COOKIE[street]";
                     } else {
                         echo "$street";
                     }?>>
@@ -128,7 +199,7 @@ $info = [];
                     <label for="streetnumber">Street number:</label>
                     <input type="text" id="streetnumber" name="streetnumber" class="form-control" value=<?php
                     if ($test == true) {
-                        echo "$_SESSION[streetnumber]";
+                        echo "$_COOKIE[streetnumber]";
                     } else {
                         echo "$streetnumber";
                     }?>>
@@ -142,7 +213,7 @@ $info = [];
                     <label for="city">City:</label>
                     <input type="text" id="city" name="city" class="form-control" value=<?php
                     if ($test == true) {
-                        echo "$_SESSION[city]";
+                        echo "$_COOKIE[city]";
                     } else {
                         echo "$city";
                     }?>>
@@ -154,7 +225,7 @@ $info = [];
                     <label for="zipcode">Zipcode</label>
                     <input type="text" id="zipcode" name="zipcode" class="form-control" value=<?php
                     if ($test == true) {
-                        echo "$_SESSION[zipcode]";
+                        echo "$_COOKIE[zipcode]";
                     } else {
                         echo "$zipcode";
                     }?>>
@@ -167,7 +238,8 @@ $info = [];
 
         <fieldset>
             <legend>Products</legend>
-            <?php   $url = 'http://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
+            <?php
+            $url = 'http://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
             if (strpos($url,'?food=1') == true) {
                 $products = $food;
             } else if (strpos($url,'?food=0') == true) {
@@ -175,6 +247,7 @@ $info = [];
             } else {
                 $products = $food;
             }
+
             foreach ($products AS $i => $product): ?>
                 <label>
                     <input type="checkbox" value="1" name="products[<?php echo $i ?>]"/> <?php echo $product['name'] ?> -
@@ -190,7 +263,7 @@ $info = [];
         <button type="submit" class="btn btn-primary" id="submit">Order!</button>
     </form>
 
-    <footer>You already ordered <strong>&euro; <?php echo $totalValue ?></strong> in food and drinks.</footer>
+    <footer>You already ordered <strong>&euro; <?php echo $_SESSION['totalValue'] ?></strong> in food and drinks.</footer>
 </div>
 <script src='./assets/js/script.js'></script>
 <style>
