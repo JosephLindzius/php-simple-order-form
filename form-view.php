@@ -1,4 +1,5 @@
 <?php
+
 // https://github.com/becodeorg/atw-lamarr-2-13/tree/master/2.The-Hills/php/3.simple-order-form
 
 function showDeliveryTime ($_time) {
@@ -12,6 +13,7 @@ function showDeliveryTime ($_time) {
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 $info = [];
+$random = 0;
 $emailValidated = false;
 $streetnumberValidated = false;
 $zipcodeValidated = false;
@@ -56,11 +58,12 @@ $zipcodeValidated = false;
 
     }
     if ($_POST["products"] == null) {
-        echo "<span class='alert-danger'>You have not selected any of our tasty food and drinks please select some and try to submit again</span>";
+        echo "<span class='alert-danger'>You have not selected any of our tasty food and drinks please select some and try to submit again</span><br>";
     }
 
-    $test = false;
+
     if ($_POST["products"] !== null && $email !== null && $emailValidated = true && $street !== null && $streetnumber !== null && $streetnumberValidated = true && $city !== null && $zipcode !==null && $zipcodeValidated = true) {
+        $random = rand(0, 100000000);
         echo "<span class='alert-success'>Your order has been processed and sent!</span><br>";
         echo "<span class='alert-success'>You have chosen ";
         echo "$_POST[delivery]";
@@ -75,32 +78,31 @@ $zipcodeValidated = false;
             echo '<br>';
         }
         echo "</span></span>";
-        $test = true;
         $totalPurchase = 0;
-        $_COOKIE["email"] = $email;
-        $_COOKIE["street"] = $street;
-        $_COOKIE["streetnumber"] = $streetnumber;
-        $_COOKIE["city"] = $city;
-        $_COOKIE["zipcode"] = $zipcode;
-
+        $_SESSION["email"] = $email;
+        $_SESSION["street"] = $street;
+        $_SESSION["streetnumber"] = $streetnumber;
+        $_SESSION["city"] = $city;
+        $_SESSION["zipcode"] = $zipcode;
+        $_SESSION["random"] = $random;
         $totalValue = 0;
-        $url = 'http://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
 
-        if (strpos($url, '?food=1') == true) {
+
+        if ($_GET['food'] == 1) {
             foreach ($_POST["products"] as $i => $selected) {
                 $totalValue += $food[$i]["price"];
             }
         }
-        if (strpos($url, '?food=0') == true) {
+        if ($_GET['food'] == 0) {
             foreach ($_POST["products"] as $i => $selected) {
                 $totalValue += $drinks[$i]["price"];
             }
         }
-        $_SESSION['totalValue'] += $totalValue;
+       // $_SESSION['totalValue'] += $totalValue;
+        $_COOKIE['totalValue'] += $totalValue;
+        $cookie = $_COOKIE['totalValue'];
+        setcookie("totalValue", $cookie, time() + 60*60*24*365);
 
-        function emailMessage (){
-
-        }
         $subject = "You have just ordered from the Personal Ham Processors!  We thank you for your purchase!";
         $closingStatement = "You have just ordered a total of &euro;$totalValue";
        // var_dump(mail ( $email , $subject , $message));
@@ -112,8 +114,8 @@ $zipcodeValidated = false;
         echo "City: $city <br>";
         echo "Zipcode: $zipcode <br><br>";
         echo "You have ordered: <br>";
-        $url = 'http://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
-        if (strpos($url, '?food=1') == true) {
+
+        if ($_GET['food'] == 1) {
             foreach ($_POST["products"] as $i => $selected) {
                 echo $food[$i]["name"];
                 echo ' &euro;';
@@ -121,7 +123,7 @@ $zipcodeValidated = false;
                 echo "<br>";
             }
         }
-        if (strpos($url, '?food=0') == true) {
+        if ($_GET['food'] == 0) {
             foreach ($_POST["products"] as $i => $selected) {
                 echo $drinks[$i]["name"];
                 echo ' &euro;';
@@ -131,11 +133,46 @@ $zipcodeValidated = false;
         }
         echo '<br>';
         echo "$closingStatement.";
+
+        $to      = $_SESSION['email'];
+        $subject = 'the subject';
+        $message = 'hello';
+        $headers = 'From: theBigHam@php.com' . "\r\n" .
+            'Reply-To: theBigHam@php.com' . "\r\n" .
+            'X-Mailer: PHP/' . phpversion();
+
+      //  var_dump(mail($to, $subject, $message, $headers));
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $_SESSION['postdata'] = $_POST;
+            unset($_POST);
+            header("Location: ".$_SERVER['REQUEST_URI']);
+            exit;
+        }
+
+
     }
 
 }
 
 
+if ($_SESSION['postdata'] !== null) {
+    echo "<span class='alert-success'>Your order #$_SESSION[random] been processed and sent!</span><br>";
+    echo "<span class='alert-success'>You have chosen ";
+    echo $_SESSION['postdata']['delivery'];
+    echo " delivery and your product shall arrive in around <span id='time'>";
+    if ($_SESSION['postdata']['delivery'] == "express") {
+        echo "45 minutes ";
+        showDeliveryTime("+45 minutes");
+        echo '<br>';
+    } else {
+        echo "2 hours.";
+        showDeliveryTime("+2 hours");
+        echo '<br>';
+    }
+    echo "</span></span>";
+    unset ($_SESSION['postdata']);
+}
 
 
 
@@ -186,8 +223,8 @@ $zipcodeValidated = false;
                 <div class="form-group col-md-6">
                     <label for="street">Street:</label>
                     <input type="text" name="street" id="street" class="form-control" value=<?php
-                    if ($test == true) {
-                        echo "$_COOKIE[street]";
+                    if ($_SESSION["street"] !== null) {
+                        echo "$_SESSION[street]";
                     } else {
                         echo "$street";
                     }?>>
@@ -198,8 +235,8 @@ $zipcodeValidated = false;
                 <div class="form-group col-md-6">
                     <label for="streetnumber">Street number:</label>
                     <input type="text" id="streetnumber" name="streetnumber" class="form-control" value=<?php
-                    if ($test == true) {
-                        echo "$_COOKIE[streetnumber]";
+                    if ($_SESSION["streetnumber"] !== null) {
+                        echo "$_SESSION[streetnumber]";
                     } else {
                         echo "$streetnumber";
                     }?>>
@@ -212,8 +249,8 @@ $zipcodeValidated = false;
                 <div class="form-group col-md-6">
                     <label for="city">City:</label>
                     <input type="text" id="city" name="city" class="form-control" value=<?php
-                    if ($test == true) {
-                        echo "$_COOKIE[city]";
+                    if ($_SESSION["city"] !== null) {
+                        echo "$_SESSION[city]";
                     } else {
                         echo "$city";
                     }?>>
@@ -224,8 +261,8 @@ $zipcodeValidated = false;
                 <div class="form-group col-md-6">
                     <label for="zipcode">Zipcode</label>
                     <input type="text" id="zipcode" name="zipcode" class="form-control" value=<?php
-                    if ($test == true) {
-                        echo "$_COOKIE[zipcode]";
+                    if ($_SESSION["zipcode"] !== null) {
+                        echo "$_SESSION[zipcode]";
                     } else {
                         echo "$zipcode";
                     }?>>
@@ -239,14 +276,15 @@ $zipcodeValidated = false;
         <fieldset>
             <legend>Products</legend>
             <?php
-            $url = 'http://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
-            if (strpos($url,'?food=1') == true) {
-                $products = $food;
-            } else if (strpos($url,'?food=0') == true) {
+
+
+            if ($_GET['food'] == 0) {
                $products = $drinks;
-            } else {
+            }
+            if ($_GET['food'] == 1 || $_GET['food'] == null) {
                 $products = $food;
             }
+
 
             foreach ($products AS $i => $product): ?>
                 <label>
@@ -263,7 +301,7 @@ $zipcodeValidated = false;
         <button type="submit" class="btn btn-primary" id="submit">Order!</button>
     </form>
 
-    <footer>You already ordered <strong>&euro; <?php echo $_SESSION['totalValue'] ?></strong> in food and drinks.</footer>
+    <footer>You already ordered <strong>&euro; <?php echo number_format((float)$_COOKIE["totalValue"], 2, '.', '') ?></strong> in food and drinks.</footer>
 </div>
 <script src='./assets/js/script.js'></script>
 <style>
