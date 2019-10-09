@@ -75,7 +75,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         if ($_GET['food'] == 1) {
             foreach ($_POST["products"] as $i => $selected) {
-                $totalValue += $food[$i]["price"];
+                for ($itemNumber = 0; $itemNumber < $selected; $itemNumber++) {
+                    $totalValue += $food[$i]["price"];
+                }
             }
         }
 
@@ -102,22 +104,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $message .= "Street number: </em>$streetnumber</em> <br>";
         $message .= "City: </em>$city</em> <br>";
         $message .= "Zipcode: </em>$zipcode</em> <br><br>";
-        $message .= "Order number: </em>#$random</em>";
-        $message .= "You have ordered: <br>";
+        $message .= "Order number: </em>#$random</em><br>";
+        $message .= "You have ordered: <br><br>";
         if ($_GET['food'] == 1) {
             foreach ($_POST["products"] as $i => $selected) {
-                $message .= $food[$i]["name"];
-                $message .= ' &euro;';
-                $message .= $food[$i]["price"];
-                $message .= "<br>";
+                if ($selected > 0) {
+                    $message .= "Quantity: $selected<br>";
+                    $message .= $food[$i]["name"];
+                    $message .= ' &euro;';
+                    $message .= $food[$i]["price"];
+                    $message .= "<br>";
+                }
             }
         }
         if ($_GET['food'] == 0) {
             foreach ($_POST["products"] as $i => $selected) {
-                $message .= $drinks[$i]["name"];
-                $message .= ' &euro;';
-                $message .= $drinks[$i]["price"];
-                $message .= "<br>";
+                if ($selected > 0) {
+                    $message .= "Quantity: $selected<br>";
+                    $message .= $drinks[$i]["name"];
+                    $message .= ' &euro;';
+                    $message .= $drinks[$i]["price"];
+                    $message .= "<br>";
+                }
+
             }
         }
         $message .= '<br>';
@@ -129,15 +138,58 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             'Reply-To: theBigHam@php.com' . "\r\n" .
             'X-Mailer: PHP/' . phpversion();
         // to client
-       mail("$to", "$subject", "$message", "$headers");
+      mail("$to", "$subject", "$message", "$headers");
+
+        $toBoss      = "$email";
+        $subjectBoss = "The webshop has recieved a new order!";
+        $messageBoss = '<html><body>';
+        $messageBoss .= "<h1>You have just received an order!</h1>";
+        $messageBoss .=  '<br>';
+        $messageBoss .= "Client Infomation:<br><br>";
+        $messageBoss .= "Email: <em>$_SESSION[email]</em> <br>";
+        $messageBoss .= "Street name: </em>$street</em> <br>";
+        $messageBoss .= "Street number: </em>$streetnumber</em> <br>";
+        $messageBoss .= "City: </em>$city</em> <br>";
+        $messageBoss .= "Zipcode: </em>$zipcode</em> <br><br>";
+        $messageBoss .= "Order number: </em>#$random</em><br>";
+        $messageBoss .= "The client has ordered: <br><br>";
+        if ($_GET['food'] == 1) {
+            foreach ($_POST["products"] as $i => $selected) {
+                if ($selected > 0) {
+                    $messageBoss .= "Quantity: $selected<br>";
+                    $messageBoss .= $food[$i]["name"];
+                    $messageBoss .= ' &euro;';
+                    $messageBoss .= $food[$i]["price"];
+                    $messageBoss .= "<br>";
+                }
+            }
+        }
+        if ($_GET['food'] == 0) {
+            foreach ($_POST["products"] as $i => $selected) {
+                if ($selected > 0) {
+                    $messageBoss .= "Quantity: $selected<br>";
+                    $messageBoss .= $drinks[$i]["name"];
+                    $messageBoss .= ' &euro;';
+                    $messageBoss .= $drinks[$i]["price"];
+                    $messageBoss .= "<br>";
+                }
+            }
+        }
+        $messageBoss .= '<br>';
+        $messageBoss .= '</body></html>';
+        $headersBoss  = 'MIME-Version: 1.0' . "\r\n";
+        $headersBoss .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+        $headersBoss .= 'From: theBigHam@php.com'. "\r\n" .
+            'Reply-To: theBigHam@php.com' . "\r\n" .
+            'X-Mailer: PHP/' . phpversion();
        // to owner
-        mail("$to", "New Order", "New order", "$headers");
+       mail("$toBoss", "$subjectBoss", "$messageBoss", "$headersBoss");
 
-
+                //clearing out postdata array
             $_SESSION['postdata'] = $_POST;
-            unset($_POST);
-            header("Location: ".$_SERVER['REQUEST_URI']);
-            exit;
+           unset($_POST);
+           header("Location: ".$_SERVER['REQUEST_URI']);
+           exit;
 
 
     }
@@ -270,7 +322,7 @@ if ($_SESSION['postdata'] !== null) {
             }
             foreach ($products AS $i => $product): ?>
                 <label>
-                    <input type="checkbox" value="1" name="products[<?php echo $i ?>]"/> <?php echo $product['name'] ?> -
+                    <input type="number" value="0" min="0" name="products[<?php echo $i ?>]"/> <?php echo $product['name'] ?> -
                     &euro; <?php echo number_format($product['price'], 2) ?></label><br />
             <?php endforeach; ?>
             <label>Delivery Options
