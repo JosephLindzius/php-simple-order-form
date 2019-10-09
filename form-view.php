@@ -12,13 +12,13 @@ function showDeliveryTime ($_time) {
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-$info = [];
-$random = 0;
-$emailValidated = false;
-$streetnumberValidated = false;
-$zipcodeValidated = false;
+    $info = [];
+    $random = 0;
+    $emailValidated = false;
+    $streetnumberValidated = false;
+    $zipcodeValidated = false;
 
-// Validate email
+// Validating email
     if (!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
         $emailErr = "$_POST[email] is NOT a valid email address";
     } else {
@@ -31,13 +31,14 @@ $zipcodeValidated = false;
     } else {
             $street = $_POST["street"];
         }
+
     if (empty($_POST["streetnumber"])) {
         $streetnumberErr = "Street number is required";
     } else {
-        $streetnumber = $_POST["streetnumber"];
         if (is_numeric($_POST["streetnumber"]) !== true) {
             $streetnumberErr = 'Numbers are only allowed in this field';
         } else {
+            $streetnumber = $_POST["streetnumber"];
             $streetnumberValidated = true;
         }
     }
@@ -49,10 +50,10 @@ $zipcodeValidated = false;
     if (empty($_POST["zipcode"])) {
         $zipcodeErr = "Zipcode is required";
     } else {
-        $zipcode = $_POST["zipcode"];
         if (is_numeric($_POST["zipcode"]) !== true) {
             $zipcodeErr = 'Numbers are only allowed in this field';
         } else {
+            $zipcode = $_POST["zipcode"];
             $zipcodeValidated = true;
         }
 
@@ -61,24 +62,9 @@ $zipcodeValidated = false;
         echo "<span class='alert-danger'>You have not selected any of our tasty food and drinks please select some and try to submit again</span><br>";
     }
 
-
     if ($_POST["products"] !== null && $email !== null && $emailValidated = true && $street !== null && $streetnumber !== null && $streetnumberValidated = true && $city !== null && $zipcode !==null && $zipcodeValidated = true) {
+        //setting up all my session variables that will be saved for the form
         $random = rand(0, 100000000);
-        echo "<span class='alert-success'>Your order has been processed and sent!</span><br>";
-        echo "<span class='alert-success'>You have chosen ";
-        echo "$_POST[delivery]";
-        echo " delivery and your product shall arrive in around <span id='time'>";
-        if ($_POST['delivery'] == "express") {
-            echo "45 minutes ";
-            showDeliveryTime("+45 minutes");
-            echo '<br>';
-        } else {
-            echo "2 hours.";
-            showDeliveryTime("+2 hours");
-            echo '<br>';
-        }
-        echo "</span></span>";
-        $totalPurchase = 0;
         $_SESSION["email"] = $email;
         $_SESSION["street"] = $street;
         $_SESSION["streetnumber"] = $streetnumber;
@@ -87,68 +73,71 @@ $zipcodeValidated = false;
         $_SESSION["random"] = $random;
         $totalValue = 0;
 
-
         if ($_GET['food'] == 1) {
             foreach ($_POST["products"] as $i => $selected) {
                 $totalValue += $food[$i]["price"];
             }
         }
+
         if ($_GET['food'] == 0) {
             foreach ($_POST["products"] as $i => $selected) {
                 $totalValue += $drinks[$i]["price"];
             }
         }
-       // $_SESSION['totalValue'] += $totalValue;
+
+        //Now updating the cookie to the last value.
         $_COOKIE['totalValue'] += $totalValue;
         $cookie = $_COOKIE['totalValue'];
         setcookie("totalValue", $cookie, time() + 60*60*24*365);
 
-        $subject = "You have just ordered from the Personal Ham Processors!  We thank you for your purchase!";
-        $closingStatement = "You have just ordered a total of &euro;$totalValue";
-       // var_dump(mail ( $email , $subject , $message));
-        echo $subject;
-        echo '<br><br>';
-        echo "Email: $email <br>";
-        echo "Street name: $street <br>";
-        echo "Street number: $streetnumber <br>";
-        echo "City: $city <br>";
-        echo "Zipcode: $zipcode <br><br>";
-        echo "You have ordered: <br>";
+        $closingStatement = "You have just ordered a total of </em>&euro;$totalValue</em>";
 
+        $to      = "$email";
+        $subject = "You have just ordered from the Personal Ham Processors! We thank you for your purchase!";
+        $message = '<html><body>';
+        $message .= "<h1>You have just ordered from the Personal Ham Processors! We thank you for your purchase!</h1>";
+        $message .=  '<br>';
+        $message .= "Email: <em>$_SESSION[email]</em> <br>";
+        $message .= "Street name: </em>$street</em> <br>";
+        $message .= "Street number: </em>$streetnumber</em> <br>";
+        $message .= "City: </em>$city</em> <br>";
+        $message .= "Zipcode: </em>$zipcode</em> <br><br>";
+        $message .= "Order number: </em>#$random</em>";
+        $message .= "You have ordered: <br>";
         if ($_GET['food'] == 1) {
             foreach ($_POST["products"] as $i => $selected) {
-                echo $food[$i]["name"];
-                echo ' &euro;';
-                echo $food[$i]["price"];
-                echo "<br>";
+                $message .= $food[$i]["name"];
+                $message .= ' &euro;';
+                $message .= $food[$i]["price"];
+                $message .= "<br>";
             }
         }
         if ($_GET['food'] == 0) {
             foreach ($_POST["products"] as $i => $selected) {
-                echo $drinks[$i]["name"];
-                echo ' &euro;';
-                echo $drinks[$i]["price"];
-                echo "<br>";
+                $message .= $drinks[$i]["name"];
+                $message .= ' &euro;';
+                $message .= $drinks[$i]["price"];
+                $message .= "<br>";
             }
         }
-        echo '<br>';
-        echo "$closingStatement.";
-
-        $to      = $_SESSION['email'];
-        $subject = 'the subject';
-        $message = 'hello';
-        $headers = 'From: theBigHam@php.com' . "\r\n" .
+        $message .= '<br>';
+        $message .= "$closingStatement.";
+        $message .= '</body></html>';
+        $headers  = 'MIME-Version: 1.0' . "\r\n";
+        $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+        $headers .= 'From: theBigHam@php.com'. "\r\n" .
             'Reply-To: theBigHam@php.com' . "\r\n" .
             'X-Mailer: PHP/' . phpversion();
+        // to client
+       mail("$to", "$subject", "$message", "$headers");
+       // to owner
+        mail("$to", "New Order", "New order", "$headers");
 
-      //  var_dump(mail($to, $subject, $message, $headers));
 
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['postdata'] = $_POST;
             unset($_POST);
             header("Location: ".$_SERVER['REQUEST_URI']);
             exit;
-        }
 
 
     }
@@ -172,11 +161,8 @@ if ($_SESSION['postdata'] !== null) {
     }
     echo "</span></span>";
     unset ($_SESSION['postdata']);
+    unset ($_SESSION['random']);
 }
-
-
-
-
 ?>
 
 <!doctype html>
@@ -276,16 +262,12 @@ if ($_SESSION['postdata'] !== null) {
         <fieldset>
             <legend>Products</legend>
             <?php
-
-
             if ($_GET['food'] == 0) {
                $products = $drinks;
             }
             if ($_GET['food'] == 1 || $_GET['food'] == null) {
                 $products = $food;
             }
-
-
             foreach ($products AS $i => $product): ?>
                 <label>
                     <input type="checkbox" value="1" name="products[<?php echo $i ?>]"/> <?php echo $product['name'] ?> -
