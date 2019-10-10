@@ -83,7 +83,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         if ($_GET['food'] == 0) {
             foreach ($_POST["products"] as $i => $selected) {
-                $totalValue += $drinks[$i]["price"];
+                for ($itemNumber = 0; $itemNumber < $selected; $itemNumber++) {
+                    $totalValue += $drinks[$i]["price"];
+                }
             }
         }
 
@@ -137,8 +139,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $headers .= 'From: theBigHam@php.com'. "\r\n" .
             'Reply-To: theBigHam@php.com' . "\r\n" .
             'X-Mailer: PHP/' . phpversion();
-        // to client
-      mail("$to", "$subject", "$message", "$headers");
+        // to client who for the moment is me
+     mail("$to", "$subject", "$message", "$headers");
 
         $toBoss      = "$email";
         $subjectBoss = "The webshop has recieved a new order!";
@@ -182,7 +184,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $headersBoss .= 'From: theBigHam@php.com'. "\r\n" .
             'Reply-To: theBigHam@php.com' . "\r\n" .
             'X-Mailer: PHP/' . phpversion();
-       // to owner
+       // to owner who for the moment is me
        mail("$toBoss", "$subjectBoss", "$messageBoss", "$headersBoss");
 
                 //clearing out postdata array

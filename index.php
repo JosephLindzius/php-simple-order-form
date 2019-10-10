@@ -41,7 +41,7 @@ $drinks = [
     ['name' => 'Sprite', 'price' => 2],
     ['name' => 'Ice-tea', 'price' => 3],
 ];
-
+if (!isset($_GET['food'])){
+    $_GET['food'] = 1;
+}
 require 'form-view.php';
-
-whatIsHappening();
